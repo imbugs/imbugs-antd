@@ -54,6 +54,7 @@ class DynamicTableForm extends React.Component {
     merge.push({
       title: '',
       key: 'action',
+      width: 60,
       align: 'right',
       render: record => {
         return <a onClick={(e) => this.del(record)}>删除</a>

@@ -11,10 +11,11 @@ export default function(props) {
     title: 'Age',
     key: 'age'
   }]
+  const dataSource=[{name: 'imbugs',age: '1'}, {name: 'alipay',age: '10'}]
   return (
     <div className={styles.normal}>
       <DynamicTableForm {...props}
-        dataSource={[{name: 'imbugs',age: '1'}, {name: 'alipay',age: '10'}]}
+        dataSource={dataSource}
         onChange={onChangeCron} columnsInfo={columnsInfo}/>
     </div>
   );
