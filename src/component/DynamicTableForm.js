@@ -15,7 +15,18 @@ class DynamicTableForm extends React.Component {
   cb = this.props.onChange;
 
   state = {
-    dataSource: this.props.dataSource && (Array.isArray(this.props.dataSource) && this.props.dataSource || [this.props.dataSource]) || [{}]
+    dataSource: null
+  };
+
+  componentWillMount() {
+    this.initDataSource();
+  }
+
+  initDataSource = () => {
+    if (this.state.dataSource == null) {
+      let ds = this.props.dataSource && (Array.isArray(this.props.dataSource) && this.props.dataSource || [this.props.dataSource]) || [{}]
+      this.setState({dataSource: ds})
+    }
   };
 
   isEmptyRow = (rowData) => {
@@ -27,7 +38,7 @@ class DynamicTableForm extends React.Component {
     }
     return true
   };
-  
+
   doUpdate = () => {
     let data = [];
     for (let i in this.state.dataSource) {
@@ -82,6 +93,8 @@ class DynamicTableForm extends React.Component {
   })();
 
   render() {
+    /** 上层props.dataSource变更时需要刷新数据 */
+    this.initDataSource();
     let rowKey = 0;
     return (
       <div>
