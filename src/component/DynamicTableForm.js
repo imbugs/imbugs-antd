@@ -1,6 +1,12 @@
 import React from "react";
 import {Button, Form, Icon, Input, Table} from "antd";
 
+/**
+ * 动态表单
+ * @param columnsInfo 列信息
+ * @param tableInfo 表信息
+ * @param onChange 更新内容事件
+ */
 class DynamicTableForm extends React.Component {
   columnsInfo = this.props.columnsInfo || [{
     title: '列名1',
@@ -14,18 +20,16 @@ class DynamicTableForm extends React.Component {
   };
   cb = this.props.onChange;
 
+  /** 记录是否已经变化, 如果变化后props.dataSource数据不再对表格产生影响 */
+  changed = false;
   state = {
-    dataSource: null
+    dataSource: [],
   };
 
-  componentWillMount() {
-    this.initDataSource();
-  }
-
   initDataSource = () => {
-    if (this.state.dataSource == null) {
-      let ds = this.props.dataSource && (Array.isArray(this.props.dataSource) && this.props.dataSource || [this.props.dataSource]) || [{}]
-      this.setState({dataSource: ds})
+    /** 上层props.dataSource变更时如果当前组件 */
+    if (!this.changed && (this.state.dataSource == null || this.state.dataSource.length == 0)) {
+      this.state.dataSource = this.props.dataSource && (Array.isArray(this.props.dataSource) && this.props.dataSource || [this.props.dataSource]) || [{}]
     }
   };
 
@@ -40,6 +44,7 @@ class DynamicTableForm extends React.Component {
   };
 
   doUpdate = () => {
+    this.changed = true;
     let data = [];
     for (let i in this.state.dataSource) {
       if (!this.isEmptyRow(this.state.dataSource[i])) {
@@ -51,19 +56,16 @@ class DynamicTableForm extends React.Component {
 
   onChange = (e, record, field) => {
     record[field] = e.target.value;
-    this.setState({})
-    this.doUpdate();
+    this.setState({}, this.doUpdate)
   };
 
 
   add = () => {
-    this.setState({dataSource: [...this.state.dataSource, {}]})
-    this.doUpdate();
+    this.setState({dataSource: [...this.state.dataSource, {}]}, this.doUpdate)
   };
 
   del = (record) => {
-    this.setState({dataSource: this.state.dataSource.filter(e => e !== record)})
-    this.doUpdate();
+    this.setState({dataSource: this.state.dataSource.filter(e => e !== record)}, this.doUpdate)
   };
 
   columns = (() => {
@@ -93,7 +95,6 @@ class DynamicTableForm extends React.Component {
   })();
 
   render() {
-    /** 上层props.dataSource变更时需要刷新数据 */
     this.initDataSource();
     let rowKey = 0;
     return (
