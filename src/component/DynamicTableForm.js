@@ -9,15 +9,33 @@ class DynamicTableForm extends React.Component {
     title: '列名2',
     key: 'column2'
   }];
+  tableInfo = this.props.tableInfo || {
+    btnLabel: '添加'
+  };
+  cb = this.props.onChange;
 
   state = {
     dataSource: this.props.dataSource && (Array.isArray(this.props.dataSource) && this.props.dataSource || [this.props.dataSource]) || [{}]
   };
 
+  isEmptyRow = (rowData) => {
+    for (let i in this.columnsInfo) {
+      let key = this.columnsInfo[i]['key'];
+      if (rowData[key]) {
+        return false;
+      }
+    }
+    return true
+  };
+  
   doUpdate = () => {
-    let cb = this.props.onChange;
-    let data = this.state.dataSource.slice();
-    cb && cb(data);
+    let data = [];
+    for (let i in this.state.dataSource) {
+      if (!this.isEmptyRow(this.state.dataSource[i])) {
+        data.push(this.state.dataSource[i]);
+      }
+    }
+    this.cb && this.cb(data);
   };
 
   onChange = (e, record, field) => {
@@ -77,7 +95,7 @@ class DynamicTableForm extends React.Component {
         </Table>
         <div style={{marginTop: 20}}></div>
         <Button type="dashed" onClick={this.add} style={{width: '100%'}}>
-          <Icon type="plus"/>添加
+          <Icon type="plus"/>{this.tableInfo.btnLabel}
         </Button>
       </div>
     )
