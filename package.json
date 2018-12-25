@@ -8,6 +8,8 @@
     "precommit": "lint-staged"
   },
   "devDependencies": {
+    "classnames": "^2.2.5",
+    "lodash": "^4.17.4",
     "babel-eslint": "^9.0.0",
     "eslint": "^5.4.0",
     "eslint-config-umi": "^0.1.5",
