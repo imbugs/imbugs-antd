@@ -1,5 +1,5 @@
 import React from "react";
-import {Button, Form, Icon, Input, Table} from "antd";
+import { Button, Form, Icon, Input, Table } from "antd";
 
 /**
  * 动态表单
@@ -61,18 +61,23 @@ class DynamicTableForm extends React.Component {
 
 
   add = () => {
-    this.setState({dataSource: [...this.state.dataSource, {}]}, this.doUpdate)
+    this.setState({ dataSource: [...this.state.dataSource, {}] }, this.doUpdate)
   };
 
   del = (record) => {
-    this.setState({dataSource: this.state.dataSource.filter(e => e !== record)}, this.doUpdate)
+    this.setState({ dataSource: this.state.dataSource.filter(e => e !== record) }, this.doUpdate)
+  };
+
+  componentDidMount = () => {
+    // 初始化完成时触发一次数据更新
+    this.doUpdate();
   };
 
   columns = (() => {
     var merge = [];
     for (var i in this.columnsInfo) {
       var item = this.columnsInfo[i];
-      const {title, key} = item;
+      const { title, key } = item;
       var render = record => {
         return <Input placeholder={`请填写${title}`} value={record[key]}
                       onChange={(e) => this.onChange(e, record, key)}/>
@@ -107,8 +112,8 @@ class DynamicTableForm extends React.Component {
           }}
           dataSource={this.state.dataSource}>
         </Table>
-        <div style={{marginTop: 20}}></div>
-        <Button type="dashed" onClick={this.add} style={{width: '100%'}}>
+        <div style={{ marginTop: 20 }}></div>
+        <Button type="dashed" onClick={this.add} style={{ width: '100%' }}>
           <Icon type="plus"/>{this.tableInfo.btnLabel}
         </Button>
       </div>
