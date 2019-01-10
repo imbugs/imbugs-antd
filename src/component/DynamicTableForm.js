@@ -1,4 +1,5 @@
 import map from "lodash/map";
+import schema from "async-validator";
 import React from "react";
 import { Button, Form, Icon, Input, Table } from "antd";
 
@@ -22,11 +23,13 @@ class DynamicTableForm extends React.Component {
     btnLabel: '添加'
   };
   cb = this.props.onChange;
+  validator = this.props.validator && new schema(this.props.validator);
 
   /** 记录是否已经变化, 如果变化后props.dataSource数据不再对表格产生影响 */
   changed = false;
   state = {
     dataSource: [],
+    error: false
   };
 
 
@@ -38,7 +41,13 @@ class DynamicTableForm extends React.Component {
         data.push(this.state.dataSource[i]);
       }
     }
-    this.cb && this.cb(data);
+    // 支持更新时校验
+    let error = this.cb && this.cb(data);
+    if (error) {
+      this.setState({ error: { ...error } })
+    } else {
+      this.setState({ error: false })
+    }
   };
 
   onRender = () => {
@@ -48,9 +57,37 @@ class DynamicTableForm extends React.Component {
     }
   };
 
+  styles = {
+    error: {
+      borderColor: '#ff4d4f',
+      outline: 0,
+      boxShadow: '0 0 0 2px rgba(245,34,45,0.2)',
+      borderRightWidth: '1px !important'
+    },
+    warning: {
+      borderColor: '#ffc53d',
+      outline: 0,
+      boxShadow: '0 0 0 2px rgba(250,173,20,0.2)',
+      borderRightWidth: '1px !important'
+    }
+  };
+
   onChange = (e, record, field) => {
     record[field] = e.target.value;
-    this.setState({}, this.doUpdate)
+    if (this.validator) {
+      this.validator.validate(record, (errors, fields) => {
+        record.css = record.css || {};
+        if (errors && errors[0]) {
+          record.css[field] = this.styles['error'];
+          this.setState({ error: { errorMsg: errors[0].message } });
+        } else {
+          record.css[field] = {};
+          this.setState({ error: false }, this.doUpdate)
+        }
+      });
+    } else {
+      this.setState({}, this.doUpdate)
+    }
   };
 
   isEmptyRow = (rowData) => {
@@ -94,8 +131,11 @@ class DynamicTableForm extends React.Component {
       var columnItem = this.columnsInfo[i];
       const { title, key } = columnItem;
       var render = record => {
+        let css = (record.css && record.css[key]) || {};
         return <Input placeholder={`请填写${title}`} value={record[key]}
-                      onChange={(e) => this.onChange(e, record, key)} disabled={record.disabled}/>
+                      onChange={(e) => this.onChange(e, record, key)}
+                      disabled={record.disabled}
+                      style={css}/>
       };
       merge.push({
         ...columnItem,
@@ -127,6 +167,13 @@ class DynamicTableForm extends React.Component {
           }}
           dataSource={this.state.dataSource}>
         </Table>
+        {this.state.error && this.state.error.errorMsg && <Form.Item
+          help={this.state.error.errorMsg}
+          validateStatus={this.state.error.type || 'error'}
+          label={false}
+          hasFeedback={false}
+          style={{ marginTop: 10 }}
+        />}
         <div style={{ marginTop: 20 }}></div>
         <Button type="dashed" onClick={this.add} style={{ width: '100%' }}>
           <Icon type="plus"/>{this.tableInfo.btnLabel}
