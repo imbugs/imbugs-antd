@@ -8,7 +8,7 @@ import { Button, Form, Icon, Input, Table } from "antd";
  * @param key react的key数据, 可设置key={type}, 当type变动的时候table重新挂载，如果需要重设table可设置此项
  * @param columnsInfo 列信息
  * @param tableInfo 表信息
- * @param onChange 更新内容事件
+ * @param onChange 更新内容事件, 支持返回错误检查
  * @param onRender 在render的时候回调修改dataSource内容, 可为每一行添加disable参数
  */
 class DynamicTableForm extends React.Component {
@@ -35,18 +35,43 @@ class DynamicTableForm extends React.Component {
 
   doUpdate = (change = true) => {
     this.changed = change;
-    let data = [];
-    for (let i in this.state.dataSource) {
-      if (!this.isEmptyRow(this.state.dataSource[i])) {
-        data.push(this.state.dataSource[i]);
+    if (this.cb) {
+      let data = [];
+      for (let i in this.state.dataSource) {
+        if (!this.isEmptyRow(this.state.dataSource[i])) {
+          data.push(this.state.dataSource[i]);
+        }
       }
-    }
-    // 支持更新时校验
-    let error = this.cb && this.cb(data);
-    if (error) {
-      this.setState({ error: { ...error } })
-    } else {
-      this.setState({ error: false })
+
+      // 支持更新时校验
+      // error: {
+      //   errorMsg: '错误信息'
+      //   type: '错误级别'
+      //   fields: { // 错误字段位置
+      //     columnKey: { // 列信息
+      //       records: [values[i], nameMap.get(name)],  // 行信息
+      //     }
+      //   }
+      // }
+      let error = this.cb(data);
+      // 重置所有错误提示
+      for (let idx in this.state.dataSource) {
+        let record = this.state.dataSource[idx];
+        record.css = {};
+      }
+
+      if (error) {
+        this.setState({ error: { ...error } })
+        for (let key in (error['fields'] || {})) {
+          let { records } = error['fields'][key];
+          (records || []).forEach(record => {
+            record.css = record.css || {}
+            record.css[key] = this.styles['error'];
+          });
+        }
+      } else {
+        this.setState({ error: false })
+      }
     }
   };
 
@@ -78,10 +103,13 @@ class DynamicTableForm extends React.Component {
       this.validator.validate(record, (errors, fields) => {
         record.css = record.css || {};
         if (errors && errors[0]) {
-          record.css[field] = this.styles['error'];
+          for (let key in fields) {
+            record.css[key] = this.styles['error'];
+          }
           this.setState({ error: { errorMsg: errors[0].message } });
         } else {
-          record.css[field] = {};
+          // 重置该行所有错误
+          record.css = {};
           this.setState({ error: false }, this.doUpdate)
         }
       });
@@ -110,7 +138,7 @@ class DynamicTableForm extends React.Component {
 
   componentDidMount() {
     // 初始化完成时触发一次数据更新
-    this.doUpdate(false);
+    this.componentWillReceiveProps(this.props)
   };
 
   componentWillReceiveProps(nextProps, nextContent) {
@@ -132,10 +160,12 @@ class DynamicTableForm extends React.Component {
       const { title, key } = columnItem;
       var render = record => {
         let css = (record.css && record.css[key]) || {};
-        return <Input placeholder={`请填写${title}`} value={record[key]}
-                      onChange={(e) => this.onChange(e, record, key)}
-                      disabled={record.disabled}
-                      style={css}/>
+        return <Input
+          placeholder={`请填写${title}`}
+          value={record[key]}
+          onChange={(e) => this.onChange(e, record, key)}
+          disabled={record.disabled}
+          style={css} />
       };
       merge.push({
         ...columnItem,
@@ -176,7 +206,7 @@ class DynamicTableForm extends React.Component {
         />}
         <div style={{ marginTop: 20 }}></div>
         <Button type="dashed" onClick={this.add} style={{ width: '100%' }}>
-          <Icon type="plus"/>{this.tableInfo.btnLabel}
+          <Icon type="plus" />{this.tableInfo.btnLabel}
         </Button>
       </div>
     )
