@@ -33,6 +33,13 @@ class DynamicTableForm extends React.Component {
   };
 
 
+  resetErrors = () => {
+    // 重置所有错误提示
+    for (let idx in this.state.dataSource) {
+      let record = this.state.dataSource[idx];
+      record.css = {};
+    }
+  };
   doUpdate = (change = true) => {
     this.changed = change;
     if (this.cb) {
@@ -54,12 +61,7 @@ class DynamicTableForm extends React.Component {
       //   }
       // }
       let error = this.cb(data);
-      // 重置所有错误提示
-      for (let idx in this.state.dataSource) {
-        let record = this.state.dataSource[idx];
-        record.css = {};
-      }
-
+      this.resetErrors();
       if (error) {
         this.setState({ error: { ...error } })
         for (let key in (error['fields'] || {})) {
@@ -100,6 +102,7 @@ class DynamicTableForm extends React.Component {
   onChange = (e, record, field) => {
     record[field] = e.target.value;
     if (this.validator) {
+      this.resetErrors();
       this.validator.validate(record, (errors, fields) => {
         record.css = record.css || {};
         if (errors && errors[0]) {
@@ -165,7 +168,7 @@ class DynamicTableForm extends React.Component {
           value={record[key]}
           onChange={(e) => this.onChange(e, record, key)}
           disabled={record.disabled}
-          style={css} />
+          style={css}/>
       };
       merge.push({
         ...columnItem,
@@ -206,7 +209,7 @@ class DynamicTableForm extends React.Component {
         />}
         <div style={{ marginTop: 20 }}></div>
         <Button type="dashed" onClick={this.add} style={{ width: '100%' }}>
-          <Icon type="plus" />{this.tableInfo.btnLabel}
+          <Icon type="plus"/>{this.tableInfo.btnLabel}
         </Button>
       </div>
     )
