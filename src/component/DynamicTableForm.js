@@ -1,7 +1,7 @@
-import map from "lodash/map";
-import schema from "async-validator";
-import React from "react";
-import { Button, Form, Icon, Input, Table } from "antd";
+import map from 'lodash/map';
+import schema from 'async-validator';
+import React from 'react';
+import { Button, Form, Icon, Input, Table } from 'antd';
 
 /**
  * 动态表单
@@ -35,18 +35,18 @@ class DynamicTableForm extends React.Component {
 
   resetErrors = () => {
     // 重置所有错误提示
-    for (let idx in this.state.dataSource) {
-      let record = this.state.dataSource[idx];
+    for (const idx in this.state.dataSource) {
+      const record = this.state.dataSource[ idx ];
       record.css = {};
     }
   };
   doUpdate = (change = true) => {
     this.changed = change;
     if (this.cb) {
-      let data = [];
-      for (let i in this.state.dataSource) {
-        if (!this.isEmptyRow(this.state.dataSource[i])) {
-          data.push(this.state.dataSource[i]);
+      const data = [];
+      for (const i in this.state.dataSource) {
+        if (!this.isEmptyRow(this.state.dataSource[ i ])) {
+          data.push(this.state.dataSource[ i ]);
         }
       }
 
@@ -60,27 +60,27 @@ class DynamicTableForm extends React.Component {
       //     }
       //   }
       // }
-      let error = this.cb(data);
+      const error = this.cb(data);
       this.resetErrors();
       if (error) {
-        this.setState({ error: { ...error } })
-        for (let key in (error['fields'] || {})) {
-          let { records } = error['fields'][key];
+        this.setState({ error: { ...error } });
+        for (const key in (error.fields || {})) {
+          const { records } = error.fields[ key ];
           (records || []).forEach(record => {
-            record.css = record.css || {}
-            record.css[key] = this.styles['error'];
+            record.css = record.css || {};
+            record.css[ key ] = this.styles.error;
           });
         }
       } else {
-        this.setState({ error: false })
+        this.setState({ error: false });
       }
     }
   };
 
   onRender = () => {
     if (typeof (this.props.onRender) === 'function') {
-      let updateDataSource = this.props.onRender(this.state.dataSource);
-      this.state.dataSource = Array.isArray(updateDataSource) ? updateDataSource : this.state.dataSource;
+      const updateDataSource = this.props.onRender(this.state.dataSource);
+      this.state.dataSource = Array.isArray(updateDataSource) ? updateDataSource : this.state.dataSource; //eslint-disable-line
     }
   };
 
@@ -100,75 +100,77 @@ class DynamicTableForm extends React.Component {
   };
 
   onChange = (e, record, field) => {
-    record[field] = e.target.value;
+    record[ field ] = e.target.value;
     if (this.validator) {
       this.resetErrors();
       this.validator.validate(record, (errors, fields) => {
         record.css = record.css || {};
-        if (errors && errors[0]) {
-          for (let key in fields) {
-            record.css[key] = this.styles['error'];
+        if (errors && errors[ 0 ]) {
+          for (const key in fields) {
+            record.css[ key ] = this.styles.error;
           }
-          this.setState({ error: { errorMsg: errors[0].message } });
+          this.setState({ error: { errorMsg: errors[ 0 ].message } });
         } else {
           // 重置该行所有错误
           record.css = {};
-          this.setState({ error: false }, this.doUpdate)
+          this.setState({ error: false }, this.doUpdate);
         }
       });
     } else {
-      this.setState({}, this.doUpdate)
+      this.setState({}, this.doUpdate);
     }
   };
 
-  isEmptyRow = (rowData) => {
-    for (let i in this.columnsInfo) {
-      let key = this.columnsInfo[i]['key'];
-      if (rowData[key]) {
+  isEmptyRow = rowData => {
+    for (const i in this.columnsInfo) {
+      const key = this.columnsInfo[ i ].key;
+      if (rowData[ key ]) {
         return false;
       }
     }
-    return true
+    return true;
   };
 
   add = () => {
-    this.setState({ dataSource: [...this.state.dataSource, {}] }, this.doUpdate)
+    this.setState({ dataSource: [ ...this.state.dataSource, {}] }, this.doUpdate);
   };
 
-  del = (record) => {
-    this.setState({ dataSource: this.state.dataSource.filter(e => e !== record) }, this.doUpdate)
+  del = record => {
+    this.setState({ dataSource: this.state.dataSource.filter(e => e !== record) }, this.doUpdate);
   };
 
   componentDidMount() {
     // 初始化完成时触发一次数据更新
-    this.componentWillReceiveProps(this.props)
-  };
+    this.componentWillReceiveProps(this.props);
+  }
 
-  componentWillReceiveProps(nextProps, nextContent) {
+  componentWillReceiveProps(nextProps) {
     /**
      * 上层props.dataSource变化时，当前表格无变动且表格为空时可接收props数据
      * 作用：即对props变化保持敏感, 又防止出现dataSource地址相同时产生的问题
      */
-    if (!this.changed && (!this.state.dataSource || this.state.dataSource.length == 0)) {
-      let dataSource = nextProps.dataSource && (Array.isArray(nextProps.dataSource) && nextProps.dataSource || [nextProps.dataSource]) || [{}]
-      this.state.dataSource = map(dataSource, item => ({ ...item }));
-      this.doUpdate(false);
+    if (!this.changed && (!this.state.dataSource || this.state.dataSource.length === 0)) {
+      const dataSource = nextProps.dataSource && (Array.isArray(nextProps.dataSource) && nextProps.dataSource || [ nextProps.dataSource ]) || [{}];
+      if (dataSource && dataSource.length) {
+        this.state.dataSource = map(dataSource, item => ({ ...item })); //eslint-disable-line
+        this.doUpdate(false);
+      }
     }
   }
 
   columns = (() => {
-    var merge = [];
-    for (var i in this.columnsInfo) {
-      var columnItem = this.columnsInfo[i];
+    const merge = [];
+    for (const i in this.columnsInfo) {
+      const columnItem = this.columnsInfo[ i ];
       const { title, key } = columnItem;
-      var render = record => {
-        let css = (record.css && record.css[key]) || {};
+      const render = record => {
+        const css = (record.css && record.css[ key ]) || {};
         return <Input
           placeholder={`请填写${title}`}
-          value={record[key]}
-          onChange={(e) => this.onChange(e, record, key)}
+          value={record[ key ]}
+          onChange={e => this.onChange(e, record, key)}
           disabled={record.disabled}
-          style={css}/>
+          style={css}/>;
       };
       merge.push({
         ...columnItem,
@@ -181,7 +183,7 @@ class DynamicTableForm extends React.Component {
       width: 60,
       align: 'right',
       render: record => {
-        return record.disabled ? null : <a onClick={(e) => this.del(record)}>删除</a>
+        return record.disabled ? null : <a onClick={() => this.del(record)}>删除</a>;
       }
     });
     return merge;
@@ -196,7 +198,7 @@ class DynamicTableForm extends React.Component {
           pagination={false}
           columns={this.columns}
           rowKey={() => {
-            return rowKey++
+            return rowKey++;
           }}
           dataSource={this.state.dataSource}>
         </Table>
@@ -212,8 +214,8 @@ class DynamicTableForm extends React.Component {
           <Icon type="plus"/>{this.tableInfo.btnLabel}
         </Button>
       </div>
-    )
+    );
   }
 }
 
-export default Form.create()(DynamicTableForm)
+export default Form.create()(DynamicTableForm);
